@@ -1,0 +1,18 @@
+{
+  "name": "monorepo",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "backend": "yarn workspace backend start",
+    "frontend": "yarn workspace frontend start",
+    "dev": "concurrently \"yarn backend\" \"yarn frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
