@@ -1,12 +1,12 @@
-import express from 'express';
-import router from './routes/router';
+import express from "express";
+import router from "./routes/router";
+import connectDB from "./config/db";
 
+connectDB();
 const app = express();
+app.use(express.json());
 
-
-
-app.use('/', router);
-
+app.use("/", router);
 
 // Start the server
 const PORT = process.env.PORT || 8081;
