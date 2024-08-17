@@ -1,20 +1,25 @@
 import React from 'react';
-import { Nav, Navbar } from 'react-bootstrap';
+import { AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 const Navigation: React.FC = () => {
-  return (
-    <Navbar bg="light" expand="lg">
-      <Navbar.Brand href="/">Monster App</Navbar.Brand>
-      <Navbar.Toggle aria-controls="basic-navbar-nav" />
-      <Navbar.Collapse id="basic-navbar-nav">
-        <Nav className="mr-auto">
-          <Nav.Link href="/">Home</Nav.Link>
-          <Nav.Link href="/create-monster">Create Monster</Nav.Link>
-          <Nav.Link href="/monsters-list">Monster List</Nav.Link>
-        </Nav>
-      </Navbar.Collapse>
-    </Navbar>
-  );
+    return (
+        <AppBar position="static">
+            <Toolbar>
+                <Typography variant="h6" style={{ flexGrow: 1 }}>
+                    <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>
+                        Trop App
+                    </Link>
+                </Typography>
+                <Button color="inherit" component={Link} to="/">
+                    Home
+                </Button>
+                <Button color="inherit" component={Link} to="/trips">
+                    My Trips List
+                </Button>
+            </Toolbar>
+        </AppBar>
+    );
 };
 
 export default Navigation;
