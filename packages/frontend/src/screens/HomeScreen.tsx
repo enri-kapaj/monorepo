@@ -28,7 +28,7 @@ interface Station {
 
 const HomeScreen: React.FC = () => {
   const [stations, setStations] = useState<Station[]>([]);
-  const [storedStations, setStoredStations] = useState<Station[]>([]);
+  const [bookedStations, setBookedStations] = useState<Station[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentLocation, setCurrentLocation] = useState<{
     x: number;
@@ -38,26 +38,17 @@ const HomeScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [stationsPerPage] = useState<number>(10);
-  const [openSnackbar, setOpenSnackbar] = useState<boolean>(false);
+  const [openSuccessSnackbar, setOpenSuccessSnackbar] =
+    useState<boolean>(false);
+  const [openErrorSnackbar, setOpenErrorSnackbar] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>("");
   const [tripName, setTripName] = useState<string>("");
-  
 
   useEffect(() => {
     if (currentLocation) {
       fetchStations();
     }
   }, [currentLocation, searchTerm, currentPage]);
-
-  useEffect(() => {
-    // Load stored stations from local storage
-    const stored = localStorage.getItem("storedStations");
-    if (stored) {
-      setStoredStations(JSON.parse(stored));
-    }else {
-        setStoredStations([]); // Set to empty if nothing is found
-    }
-  }, []);
 
   const fetchStations = async () => {
     setLoading(true);
@@ -72,6 +63,7 @@ const HomeScreen: React.FC = () => {
         },
       });
       setStations(response.data);
+      setLoading(false);
     } catch (error) {
       setError("Failed to fetch stations.");
     } finally {
@@ -128,51 +120,51 @@ const HomeScreen: React.FC = () => {
   const pageCount = Math.ceil(stations.length / stationsPerPage);
 
   const handleAddStation = (station: Station) => {
-    let stationsArray = storedStations ? storedStations : [];
-    stationsArray.push(station);
-    localStorage.setItem("storedStations", JSON.stringify(stationsArray));
+    setBookedStations((prev) => {
+      return [...prev, station];
+    });
     setSnackbarMessage(`Station ${station.name} added successfully!`);
-    setOpenSnackbar(true);
+    setOpenSuccessSnackbar(true);
+    setOpenErrorSnackbar(false);
   };
 
   const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
+    setOpenSuccessSnackbar(false);
+    setOpenErrorSnackbar(false);
   };
 
   // Function to save the trip
   const handleSaveTrip = async () => {
     if (!tripName) {
       setSnackbarMessage("Trip name is required.");
-      setOpenSnackbar(true);
+      setOpenErrorSnackbar(true);
       return;
     }
 
     const tripData = {
-      stations: storedStations,
+      stations: bookedStations,
     };
 
     try {
-        setLoading(true)
+      setLoading(true);
       const response = await axios.post(
         `http://localhost:8081/create-new-trip?tripName=${tripName}`,
         tripData
       );
       setSnackbarMessage("Trip saved successfully!");
-      setOpenSnackbar(true);
-      localStorage.removeItem("storedStations");
-      setLoading(false)
-      //window.location.reload()
-
+      setOpenSuccessSnackbar(true);
+      setBookedStations([]);
+      setLoading(false);
     } catch (error) {
       setSnackbarMessage("Failed to save trip.");
-      setOpenSnackbar(true);
-      setLoading(false)
+      setOpenErrorSnackbar(true);
+      setLoading(false);
     }
   };
 
   return (
     <div style={{ padding: 20 }}>
-        <Navigation />
+      <Navigation />
       <Container>
         <h2>My Trip</h2>
 
@@ -195,57 +187,61 @@ const HomeScreen: React.FC = () => {
 
         {/* New Table for Stored Stations */}
         {loading ? (
-        <CircularProgress />
-      ) : (
-        <TableContainer component={Paper} style={{ marginTop: 20 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Location X</TableCell>
-                <TableCell>Location Y</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {storedStations.length > 0 ? (
-                storedStations.map((station: Station, index) => (
-                  <TableRow key={station.id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{station.id}</TableCell>
-                    <TableCell>{station.name}</TableCell>
-                    <TableCell>{station.locationX}</TableCell>
-                    <TableCell>{station.locationY}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
+          <CircularProgress />
+        ) : (
+          <TableContainer component={Paper} style={{ marginTop: 20 }}>
+            <Table>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={4}>No stored stations found</TableCell>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Location X</TableCell>
+                  <TableCell>Location Y</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>)}
+              </TableHead>
+              <TableBody>
+                {bookedStations.length > 0 ? (
+                  bookedStations.map((station: Station, index) => (
+                    <TableRow key={station.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{station.id}</TableCell>
+                      <TableCell>{station.name}</TableCell>
+                      <TableCell>{station.locationX}</TableCell>
+                      <TableCell>{station.locationY}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4}>No stored stations found</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Container>
       <h1>Station List</h1>
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success">
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-      {error && (
+      {openSuccessSnackbar && (
         <Snackbar
-          open={openSnackbar}
-          autoHideDuration={6000}
+          open={openSuccessSnackbar}
+          autoHideDuration={1000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        >
+          <Alert onClose={handleCloseSnackbar} severity="success">
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
+      )}
+
+      {openErrorSnackbar && (
+        <Snackbar
+          open={openErrorSnackbar}
+          autoHideDuration={3000}
           onClose={handleCloseSnackbar}
         >
           <Alert onClose={handleCloseSnackbar} severity="error">
-            {error}
+            {snackbarMessage}
           </Alert>
         </Snackbar>
       )}
@@ -273,7 +269,7 @@ const HomeScreen: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {currentStations.length > 0 ? (
+                {stations.length > 0 ? (
                   currentStations.map((station) => (
                     <TableRow key={station.id}>
                       <TableCell>{station.id}</TableCell>

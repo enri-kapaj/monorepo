@@ -42,7 +42,7 @@ const TripList: React.FC = () => {
     const fetchTrips = async () => {
       try {
         const response = await axios.get("http://localhost:8081/get-trips");
-        setTrips(response.data); // Assuming response.data is an array of trips
+        setTrips(response.data);
       } catch (err) {
         setError("Failed to fetch trips.");
         setOpenSnackbar(true);
@@ -76,6 +76,41 @@ const TripList: React.FC = () => {
     setSelectedTrip(null);
   };
 
+  const renderContent = () => {
+    if (loading) {
+      return <Typography>Loading...</Typography>;
+    }
+
+    if (error) {
+      return <Alert severity="error">{error}</Alert>;
+    }
+
+    return (
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>ID</TableCell>
+            <TableCell>Name</TableCell>
+            <TableCell>Created At</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {trips.map((trip) => (
+            <TableRow
+              key={trip.name}
+              onClick={() => handleOpenModal(trip.name)}
+              style={{ cursor: "pointer" }}
+            >
+              <TableCell>{trip._id}</TableCell>
+              <TableCell>{trip.name}</TableCell>
+              <TableCell>{new Date(trip.createdAt).toLocaleString()}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  };
+
   return (
     <div>
       <Navigation />
@@ -83,38 +118,7 @@ const TripList: React.FC = () => {
         <Typography variant="h4" gutterBottom>
           My Trips
         </Typography>
-
-        {loading ? (
-          <Typography>Loading...</Typography>
-        ) : error ? (
-          <Alert severity="error">{error}</Alert>
-        ) : (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Created At</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {trips.map((trip) => (
-                <TableRow
-                  key={trip.name}
-                  onClick={() => handleOpenModal(trip.name)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <TableCell>{trip._id}</TableCell>
-                  <TableCell>{trip.name}</TableCell>
-                  <TableCell>
-                    {new Date(trip.createdAt).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-
+        {renderContent()}
         <Snackbar
           open={openSnackbar}
           autoHideDuration={6000}
