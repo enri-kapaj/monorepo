@@ -118,14 +118,22 @@ const HomeScreen: React.FC = () => {
   };
 
   const pageCount = Math.ceil(stations.length / stationsPerPage);
-
   const handleAddStation = (station: Station) => {
     setBookedStations((prev) => {
+      const stationExists = prev.some((s) => s.id === station.id);
+
+      if (stationExists) {
+        setSnackbarMessage(`Station ${station.name} is already booked!`);
+        setOpenErrorSnackbar(true);
+        setOpenSuccessSnackbar(false);
+        return prev;
+      }
+
+      setSnackbarMessage(`Station ${station.name} added successfully!`);
+      setOpenSuccessSnackbar(true);
+      setOpenErrorSnackbar(false);
       return [...prev, station];
     });
-    setSnackbarMessage(`Station ${station.name} added successfully!`);
-    setOpenSuccessSnackbar(true);
-    setOpenErrorSnackbar(false);
   };
 
   const handleCloseSnackbar = () => {
@@ -162,6 +170,17 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  // Function to remove a station from booked
+  const handleRemoveStation = (station: Station) => {
+    setBookedStations((prev) => prev.filter((st) => st.id !== station.id));
+  
+    // Set the snackbar message and state after the stations are updated
+    setSnackbarMessage(`Station ${station.name} removed successfully!`);
+    setOpenSuccessSnackbar(true);
+    setOpenErrorSnackbar(false);
+  };
+  
+
   return (
     <div style={{ padding: 20 }}>
       <Navigation />
@@ -197,6 +216,7 @@ const HomeScreen: React.FC = () => {
                   <TableCell>Name</TableCell>
                   <TableCell>Location X</TableCell>
                   <TableCell>Location Y</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -204,10 +224,19 @@ const HomeScreen: React.FC = () => {
                   bookedStations.map((station: Station, index) => (
                     <TableRow key={station.id}>
                       <TableCell>{index + 1}</TableCell>
-                      <TableCell>{station.id}</TableCell>
                       <TableCell>{station.name}</TableCell>
                       <TableCell>{station.locationX}</TableCell>
                       <TableCell>{station.locationY}</TableCell>
+                      <TableCell>
+                        {" "}
+                        <Button
+                          variant="contained"
+                          color="error"
+                          onClick={() => handleRemoveStation(station)}
+                        >
+                          Remove
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (

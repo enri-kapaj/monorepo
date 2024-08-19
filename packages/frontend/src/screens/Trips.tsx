@@ -14,6 +14,7 @@ import {
   Button,
 } from "@mui/material";
 import Navigation from "../components/Navigation";
+import { MapContainer, Marker, Polyline, Popup, TileLayer } from "react-leaflet";
 
 interface Station {
   locationX: string;
@@ -134,8 +135,12 @@ const TripList: React.FC = () => {
             style={{
               padding: 20,
               margin: "auto",
-              marginTop: "10%",
-              maxWidth: 600,
+              marginTop: "5%",
+              maxWidth: "90%",
+              maxHeight: "90%",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             <Typography variant="h5">Trip Details</Typography>
@@ -143,14 +148,39 @@ const TripList: React.FC = () => {
               <>
                 <Typography variant="h6">Name: {selectedTrip.name}</Typography>
                 <Typography variant="h6">Stations:</Typography>
-                {selectedTrip.stations.map((station) => (
-                  <div key={station._id}>
-                    <Typography>
-                      {station.name} (X: {station.locationX}, Y:{" "}
-                      {station.locationY})
-                    </Typography>
-                  </div>
-                ))}
+                <MapContainer
+                  center={[parseFloat(selectedTrip.stations[0].locationX), parseFloat(selectedTrip.stations[0].locationY)]} // Ensure this is a valid center point
+                  zoom={10}
+                  scrollWheelZoom={true}
+                  style={{ height: "400px", width: "100%" }} // Ensure height is set
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  {selectedTrip.stations.map((station) => (
+                    <Marker
+                      key={station._id}
+                      position={[
+                        parseFloat(station.locationX),
+                        parseFloat(station.locationY),
+                      ]}
+                    >
+                      <Popup>{station.name}</Popup>
+                    </Marker>
+                  ))}
+                {selectedTrip.stations.length > 1 && (
+                    <Polyline
+                      positions={selectedTrip.stations.map((station) => [
+                        parseFloat(station.locationX),
+                        parseFloat(station.locationY),
+                      ])}
+                      color="red"
+                      weight={3}
+                      dashArray="5,10"
+                    />
+                  )}
+                </MapContainer>
               </>
             ) : (
               <Typography>No trip details available.</Typography>
